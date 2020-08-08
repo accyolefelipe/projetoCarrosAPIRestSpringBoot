@@ -1,6 +1,5 @@
 package br.com.projeto.carros.domain;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +20,7 @@ public class CarroService {
 		return carroRepository.findById(id);
 	}
 
-	public Iterable<Carro> getCarrosByTipo(String tipo) {
+	public List<Carro> getCarrosByTipo(String tipo) {
 		return carroRepository.findByTipo(tipo);
 	}
 
@@ -58,14 +57,6 @@ public class CarroService {
 		}
 	}
 
-	public List<Carro> getCarrosFake() {
-		List<Carro> carros = new ArrayList<>();
-
-		carros.add(new Carro(1L, "Fusca"));
-		carros.add(new Carro(2L, "Brasilia"));
-		carros.add(new Carro(3L, "Chevette"));
-
-		return carros;
-	}
+	
 
 }
