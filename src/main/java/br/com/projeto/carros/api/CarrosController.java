@@ -1,5 +1,6 @@
 package br.com.projeto.carros.api;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.projeto.carros.domain.Carro;
 import br.com.projeto.carros.domain.CarroService;
+import br.com.projeto.carros.domain.dto.CarroDTO;
 
 @RestController
 @RequestMapping("/api/v1/carros")
@@ -25,14 +28,14 @@ public class CarrosController {
 	private CarroService carroService;
 
 	@GetMapping()
-	public ResponseEntity<Iterable<Carro>> getCarros() {
+	public ResponseEntity<List<CarroDTO>> getCarros() {
 		return ResponseEntity.ok(carroService.getCarros());
 		// return new ResponseEntity<>(carroService.getCarros(), HttpStatus.OK);;
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity getCarroById(@PathVariable("id") Long id) {
-		Optional<Carro> carro = carroService.getCarroById(id);
+		Optional<CarroDTO> carro = carroService.getCarroById(id);
 
 		if (carro.isPresent()) {
 			return ResponseEntity.ok(carro.get());
@@ -43,8 +46,8 @@ public class CarrosController {
 	}
 
 	@GetMapping("/tipo/{tipo}")
-	public ResponseEntity getCarroByTipo(@PathVariable("tipo") String tipo) {
-		List<Carro> carros = carroService.getCarrosByTipo(tipo);
+	public ResponseEntity<List<CarroDTO>> getCarroByTipo(@PathVariable("tipo") String tipo) {
+		List<CarroDTO> carros = carroService.getCarrosByTipo(tipo);
 
 		if (carros.isEmpty()) {
 			return ResponseEntity.noContent().build();
@@ -54,20 +57,38 @@ public class CarrosController {
 	}
 
 	@PostMapping
-	public String post(@RequestBody Carro carro) {
-		Carro c = carroService.insert(carro);
-		return "Carro Salvo com Sucesso " + c.getId();
+	public ResponseEntity post(@RequestBody Carro carro) {
+
+		try {
+			CarroDTO c = carroService.insert(carro);
+
+			URI location = getUri(c);
+			return ResponseEntity.created(location).build();
+
+		} catch (Exception ex) {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+
+	private URI getUri(CarroDTO c) {
+		return ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(c.getId()).toUri();
 	}
 
 	@PutMapping("/{id}")
-	public String put(@PathVariable("id") Long id, @RequestBody Carro carro) {
-		Carro c = carroService.update(carro, id);
-		return "Carro atualizado com Sucesso " + c.getId();
+	public ResponseEntity put(@PathVariable("id") Long id, @RequestBody Carro carro) {
+		CarroDTO c = carroService.update(carro, id);
+
+		return c != null ? ResponseEntity.ok(c) :
+			ResponseEntity.notFound().build();
 	}
 
 	@DeleteMapping("/{id}")
-	public void delete(@PathVariable("id") Long id) {
-		carroService.delete(id);
+	public ResponseEntity delete(@PathVariable("id") Long id) {
+		boolean ok = carroService.delete(id);
+		
+		return ok  ? ResponseEntity.ok().build() :
+			ResponseEntity.notFound().build();
+		
 	}
 
 }
